@@ -51,14 +51,37 @@ document.addEventListener("DOMContentLoaded", () => {
 
   startBtn.addEventListener("click", () => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      chrome.tabs.sendMessage(tabs[0].id, { action: "ACTIVATE" });
-      window.close(); // Close popup to let user interact
+      if (tabs[0]) {
+        chrome.tabs.sendMessage(
+          tabs[0].id,
+          { action: "ACTIVATE" },
+          (response) => {
+            if (chrome.runtime.lastError) {
+              // Suppress error if content script is not ready
+              console.warn(
+                "Content script not ready:",
+                chrome.runtime.lastError.message,
+              );
+            }
+          },
+        );
+        window.close(); // Close popup to let user interact
+      }
     });
   });
 
   resetBtn.addEventListener("click", () => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      chrome.tabs.sendMessage(tabs[0].id, { action: "RESET" });
+      if (tabs[0]) {
+        chrome.tabs.sendMessage(tabs[0].id, { action: "RESET" }, (response) => {
+          if (chrome.runtime.lastError) {
+            console.warn(
+              "Content script not ready:",
+              chrome.runtime.lastError.message,
+            );
+          }
+        });
+      }
       startArea.style.display = "block";
       inspectorControls.style.display = "none";
       currentGroups = [];
@@ -122,30 +145,68 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Iterate DOM inputs to get user text
     const inputs = document.querySelectorAll(".group-input");
+    const cellSize = elementInfo.cellSize || 50;
+
     inputs.forEach((input) => {
       const label = input.dataset.label;
       const text = input.value || "No detailed observation provided.";
       const group = currentGroups.find((g) => g.label === label);
 
-      let avgR = 0,
-        avgC = 0;
-      group.cells.forEach((c) => {
-        avgR += c.r;
-        avgC += c.c;
-      });
-      avgR /= group.cells.length;
-      avgC /= group.cells.length;
+      if (group && group.cells.length > 0) {
+        // Calculate Bounding Box
+        let minR = Infinity,
+          maxR = -Infinity;
+        let minC = Infinity,
+          maxC = -Infinity;
 
-      // Calculate approximate pixel coordinates relative to element
-      const approxX = Math.round(avgC * 50);
-      const approxY = Math.round(avgR * 50);
+        group.cells.forEach((c) => {
+          if (c.r < minR) minR = c.r;
+          if (c.r > maxR) maxR = c.r;
+          if (c.c < minC) minC = c.c;
+          if (c.c > maxC) maxC = c.c;
+        });
 
-      const posDesc = `Grid Row ~${Math.round(avgR)}, Col ~${Math.round(avgC)} (Approx. ${approxX}px from left, ${approxY}px from top)`;
+        // Calculate pixel dimensions relative to the element
+        const top = minR * cellSize;
+        const left = minC * cellSize;
+        const width = (maxC - minC + 1) * cellSize;
+        const height = (maxR - minR + 1) * cellSize;
 
-      groupMappings += `- **Group ${label}:** Consists of ${group.cells.length} cells. Centered at: ${posDesc}.\n`;
+        // Bounding Box Description
+        const boundingBoxDesc = `Top: ${top}px, Left: ${left}px, Width: ${width}px, Height: ${height}px`;
 
-      userFeedback += `### Group ${label}\n**User Observation:** ${text}\n**Requirement:** Adjust the layout in this specific area to resolve the friction described above.\n\n`;
+        groupMappings += `- **Group ${label}:** Pixel Bounding Box: [${boundingBoxDesc}]. Covers grid rows ${minR}-${maxR} and cols ${minC}-${maxC}.\n`;
+
+        userFeedback += `### Group ${label} (Target Area)\n`;
+        userFeedback += `**User Observation:** ${text}\n`;
+        userFeedback += `**Precise Location:** The user selected area is defined by: ${boundingBoxDesc}.\n`;
+        userFeedback += `**STRICT REQUIREMENT:** Any content moved or generated for this group MUST be resized and styled to fit EXACTLY within this ${width}px x ${height}px area. Do not overflow. Adjust font-sizes, image sizes, and padding to fit.\n\n`;
+      }
     });
+
+    // Build the "Before" Code section
+    const codeContext = `
+### 1. The "Before" Code (Current State)
+**Context:** The user is working on an existing component.
+- **HTML Snippet:**
+\`\`\`html
+${elementInfo.outerHTML}
+\`\`\`
+- **Computed Styles:**
+  - Display: ${elementInfo.computedStyles.display}
+  - Font: ${elementInfo.computedStyles.fontFamily} (${elementInfo.computedStyles.fontSize})
+  - Colors: ${elementInfo.computedStyles.color} (Text), ${elementInfo.computedStyles.backgroundColor} (Background)
+  - Layout: Position ${elementInfo.computedStyles.position}, Grid: ${elementInfo.computedStyles.gridTemplateColumns || "N/A"}, Flex: ${elementInfo.computedStyles.flexDirection || "N/A"}
+
+### 2. Content Breakdown
+- **Text Length:** ${elementInfo.contentSummary.textLength} chars
+- **Images:** ${elementInfo.contentSummary.imageCount} images present
+- **Sample Text:** "${elementInfo.contentSummary.sampleText}..."
+
+### 3. Layout Context (Parent Relationship)
+- **Parent Element:** <${elementInfo.parent.tagName}> (ID: ${elementInfo.parent.id || "N/A"}, Class: ${elementInfo.parent.className || "N/A"})
+- **Parent Display:** ${elementInfo.parent.display}
+`;
 
     const prompt = `## Role & Objective
 You are an expert Frontend Developer and UI/UX Designer. The user is "vibe coding" — visually debugging a web layout by selecting specific problem areas on a grid overlay.
@@ -160,12 +221,22 @@ Your goal is to **re-write the HTML/CSS** for the selected section to fix the de
 - **Red Squares:** Indicate technical or visual friction points.
 - **Groupings:** Adjacent red squares are grouped (A, B, C...) to denote specific layout zones.
 
+${codeContext}
+
 ## Spatial Analysis (Problem Areas)
 I have identified ${currentGroups.length} distinct problem groups on this element:
 ${groupMappings}
 ## User Feedback & Requirements
-${userFeedback}## Execution Plan
-Based on the spatial data and user feedback above, please generate the corrected code (HTML/CSS) to improve the layout organization. Ensure the new layout fits within the specified dimensions and responds correctly to the aspect ratio.`;
+${userFeedback}
+
+## Execution Plan
+Generate the corrected HTML/CSS.
+
+**CRITICAL INSTRUCTIONS:**
+1. **EXACT FIT:** For each Group, you are provided a **Pixel Bounding Box** (Top, Left, Width, Height). You MUST ensure the content for that group fits entirely within those dimensions.
+2. **RESIZE CONTENT:** If the user asks to "Move X to Group A", you must explicitly write CSS to resize X (e.g., \`width: 100%; height: 100%; object-fit: contain\`) so it fits the bounding box.
+3. **NO OVERFLOW:** The modified layout must NOT exceed the original element dimensions (${elementInfo.width}px x ${elementInfo.height}px).
+4. **Reshape:** If the aspect ratio of the content differs from the bounding box, use CSS grid or flexbox to center/stretch it appropriately as per the bounding box shape.`;
 
     outputArea.value = prompt;
   }

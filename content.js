@@ -72,11 +72,65 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             windowWidth: window.innerWidth,
             windowHeight: window.innerHeight,
             cellSize: 50,
+            // New extended details
+            outerHTML: getTruncatedHTML(lockedElement),
+            parent: getParentDetails(lockedElement),
+            computedStyles: getComputedStylesSummary(lockedElement),
+            contentSummary: getContentSummary(lockedElement),
           }
         : null,
     });
   }
 });
+
+function getTruncatedHTML(element) {
+  const fullHTML = element.outerHTML;
+  // Truncate to 2000 chars if too long, keeping the structure hinted
+  if (fullHTML.length > 2000) {
+    return fullHTML.substring(0, 2000) + "\n... (truncated)";
+  }
+  return fullHTML;
+}
+
+function getParentDetails(element) {
+  const parent = element.parentElement;
+  if (!parent) return null;
+  return {
+    tagName: parent.tagName,
+    id: parent.id,
+    className: parent.className,
+    display: window.getComputedStyle(parent).display,
+  };
+}
+
+function getComputedStylesSummary(element) {
+  const style = window.getComputedStyle(element);
+  return {
+    display: style.display,
+    fontFamily: style.fontFamily,
+    fontSize: style.fontSize,
+    color: style.color,
+    backgroundColor: style.backgroundColor,
+    position: style.position,
+    padding: style.padding,
+    margin: style.margin,
+    borderRadius: style.borderRadius,
+    gridTemplateColumns: style.gridTemplateColumns, // capture grid details if any
+    flexDirection: style.flexDirection, // capture flex details if any
+  };
+}
+
+function getContentSummary(element) {
+  const textContent = element.innerText || "";
+  const images = element.querySelectorAll("img");
+  const hasImages = images.length > 0;
+  return {
+    textLength: textContent.length,
+    hasImages: hasImages,
+    imageCount: images.length,
+    sampleText: textContent.substring(0, 100).replace(/\s+/g, " ").trim(), // First 100 chars
+  };
+}
 
 function startInspector() {
   document.addEventListener("mouseover", handleHover);
