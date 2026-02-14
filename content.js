@@ -69,6 +69,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             className: lockedElement.className,
             width: lockedElement.offsetWidth,
             height: lockedElement.offsetHeight,
+            windowWidth: window.innerWidth,
+            windowHeight: window.innerHeight,
+            cellSize: 50,
           }
         : null,
     });

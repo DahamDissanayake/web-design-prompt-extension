@@ -118,6 +118,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let groupMappings = "";
     let userFeedback = "";
+    const aspectRatio = (elementInfo.width / elementInfo.height).toFixed(2);
 
     // Iterate DOM inputs to get user text
     const inputs = document.querySelectorAll(".group-input");
@@ -126,22 +127,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const text = input.value || "No detailed observation provided.";
       const group = currentGroups.find((g) => g.label === label);
 
-      // Calculate relative position description
-      let posDesc = "Center";
-      // Simple heuristic based on average row/col vs grid size
-      // (This requires grid dimensions which we might not have explicitly here,
-      // but we can infer or pass from content script. For now, specific coords or simplfied logic)
-
-      // Let's use simplified logic if we don't have grid dims:
-      // We can just estimate standard quadrants based on cell indices if we knew grid size.
-      // Since we don't have grid dims in `elementInfo`, let's just use "Specific Area".
-      // Or better, update content.js to send grid dims.
-      // User prompt example says "Top-Left" or "Center".
-      // I'll stick to a generic "Located at generated coordinates" or similar if logic is complex,
-      // but let's try to be smart. R and C are available.
-
-      // But for robustness, let's keep it simple for now or fetch bounds.
-      // Let's assume (0,0) is top left.
       let avgR = 0,
         avgC = 0;
       group.cells.forEach((c) => {
@@ -151,23 +136,36 @@ document.addEventListener("DOMContentLoaded", () => {
       avgR /= group.cells.length;
       avgC /= group.cells.length;
 
-      posDesc = `Row ${Math.round(avgR)}, Col ${Math.round(avgC)}`;
+      // Calculate approximate pixel coordinates relative to element
+      const approxX = Math.round(avgC * 50);
+      const approxY = Math.round(avgR * 50);
 
-      groupMappings += `- **Group ${label}:** Consists of ${group.cells.length} blocks. Located roughly at [${posDesc}].\n`;
+      const posDesc = `Grid Row ~${Math.round(avgR)}, Col ~${Math.round(avgC)} (Approx. ${approxX}px from left, ${approxY}px from top)`;
 
-      userFeedback += `### Group ${label}\n**User Observation:** ${text}\n**Requirement:** Please adjust the layout in this specific area to resolve the friction described above.\n\n`;
+      groupMappings += `- **Group ${label}:** Consists of ${group.cells.length} cells. Centered at: ${posDesc}.\n`;
+
+      userFeedback += `### Group ${label}\n**User Observation:** ${text}\n**Requirement:** Adjust the layout in this specific area to resolve the friction described above.\n\n`;
     });
 
-    const prompt = `## VibeCheck Context
-**Selected Element:** ${elementInfo.tagName} (Class: ${elementInfo.className}, ID: ${elementInfo.id})
-**Dimensions:** ${elementInfo.width}px x ${elementInfo.height}px
+    const prompt = `## Role & Objective
+You are an expert Frontend Developer and UI/UX Designer. The user is "vibe coding" — visually debugging a web layout by selecting specific problem areas on a grid overlay.
+Your goal is to **re-write the HTML/CSS** for the selected section to fix the described issues while maintaining the overall design integrity.
 
-## Spatial Mapping
-I have identified ${currentGroups.length} distinct problem areas on this element based on a 50px grid overlay:
+## Technical Context
+**Viewport Size:** ${elementInfo.windowWidth}px width x ${elementInfo.windowHeight}px height
+**Selected Element:** ${elementInfo.tagName} (ID: "${elementInfo.id}", Class: "${elementInfo.className}")
+**Element Dimensions:** ${elementInfo.width}px width x ${elementInfo.height}px height
+**Aspect Ratio:** ${aspectRatio}
+**Grid System:** The user has identified problem areas using a granular **50px x 50px grid overlay**.
+- **Red Squares:** Indicate technical or visual friction points.
+- **Groupings:** Adjacent red squares are grouped (A, B, C...) to denote specific layout zones.
+
+## Spatial Analysis (Problem Areas)
+I have identified ${currentGroups.length} distinct problem groups on this element:
 ${groupMappings}
 ## User Feedback & Requirements
 ${userFeedback}## Execution Plan
-Re-write the CSS/HTML for this section to accommodate these specific spatial groupings while maintaining the overall design integrity.`;
+Based on the spatial data and user feedback above, please generate the corrected code (HTML/CSS) to improve the layout organization. Ensure the new layout fits within the specified dimensions and responds correctly to the aspect ratio.`;
 
     outputArea.value = prompt;
   }
