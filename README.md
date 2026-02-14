@@ -35,6 +35,10 @@
 - **Stack**: JavaScript (ES6+), HTML5, CSS3
 - **Theme**: Professional Monochrome (Inter/System Font Stack)
 
+## Fuel My Caffeine Addiction / Pay Google's Ransom
+
+Google charges a **$5** cover charge to get into the Chrome Web Store club. If you want to see this extension listed there (so you don't have to sideload it like a hacker from a 90s movie), toss a coin. Otherwise, enjoy loading this unpacked extension manually forever. No pressure. 💅
+
 ## License
 
 This project is open-source and available for personal and commercial use.
