@@ -1,68 +1,44 @@
 # VibeCheck Layout Assistant
 
-**VibeCheck Layout Assistant** is a powerful Chrome Extension designed to help developers and designers "vibe code" by debugging web layouts visually. It allows you to select page elements, overlay a grid, identify specific problem areas, and automatically generate structured prompts to fix design issues.
+**VibeCheck Layout Assistant** is a professional Chrome Extension designed to streamline the "vibe coding" process. It enables developers and designers to visually debug web layouts by selecting elements, applying a precision grid overlay, identifying friction points, and automatically generating structured implementation prompts.
 
 ## Features
 
-- **🎯 Interactive Inspector**: Hover over any element on a webpage to highlight it.
-- **🔒 Grid Overlay**: Lock onto an element to generate a 50px precision grid.
-- **🔴 Problem Area Detection**: Click grid cells to mark areas that need adjustment.
-- **🤖 Smart Grouping**: Automatically groups adjacent selected cells (Connected-Component Labeling) and assigns them unique labels (A, B, C...).
-- **📝 Structured Prompt Generation**: Generates detailed, context-aware prompts for fixing layout issues, ready to copy and paste into your favorite coding assistant.
-- **⚡ Vanilla Implementation**: Built with pure JavaScript, HTML, and CSS (Manifest V3) - no heavy frameworks or dependencies.
+- **Interactive Inspector**: Precision element selection with visual highlighting.
+- **Grid Overlay System**: Locks onto elements to generate a 50px reference grid.
+- **Friction Point Detection**: Clickable grid cells to explicitly mark areas requiring adjustment.
+- **Algorithmic Grouping**: Uses Connected-Component Labeling (CCL) to automatically group adjacent markers into distinct zones (A, B, C...).
+- **Structured Prompt Generation**: synthesizing spatial data and user observations into context-aware prompts for AI coding assistants.
+- **Lightweight Architecture**: Built with Vanilla JavaScript and CSS (Manifest V3) for zero-dependency performance.
 
 ## Installation
 
-1.  **Clone or Download** this repository to your local machine.
+1.  **Clone or Download** this repository.
 2.  Open Google Chrome and navigate to `chrome://extensions`.
-3.  Enable **Developer mode** by toggling the switch in the top-right corner.
-4.  Click the **Load unpacked** button.
-5.  Select the directory where you saved this project (the folder containing `manifest.json`).
-6.  The **VibeCheck Layout Assistant** icon should appear in your extensions toolbar.
+3.  Enable **Developer mode** in the top-right corner.
+4.  Click **Load unpacked**.
+5.  Select the project directory (containing `manifest.json`).
+6.  The extension icon will appear in your toolbar.
 
 ## Usage Guide
 
-1.  **Activate the Inspector**:
-    - Click the extension icon in your toolbar.
-    - Click the **"Start Inspector"** button in the popup.
+1.  **Activate Inspector**: Click the extension icon and select **Start Inspector**.
+2.  **Select Element**: Hover to highlight and click to lock the target element.
+3.  **Identify Issues**: Click grid cells to mark areas of concern. The system groups them automatically.
+4.  **Annotate**: Open the popup to view detected groups and add specific observations.
+5.  **Generate Prompt**: Click **Generate Fix Prompt** to build a detailed engineering request.
+6.  **Execute**: Copy the prompt to your clipboard and use it with your preferred coding tool.
 
-2.  **Select an Element**:
-    - Hover over any element on the page. You will see a blue outline.
-    - **Click** to lock your selection and generate the grid overlay.
+## Technical Details
 
-3.  **Mark Problem Areas**:
-    - Click on the grid cells (50x50px) that correspond to the layout issue you want to fix.
-    - Cells will turn **red** when selected.
-    - The extension automatically groups touching cells and labels them (Group A, Group B, etc.).
-
-4.  **Describe Issues**:
-    - Open the extension popup again (click the icon).
-    - You will see a list of detected groups (e.g., "Group A").
-    - Enter a brief description of the issue for each group (e.g., "Too much padding here", "Misaligned text").
-
-5.  **Generate Prompt**:
-    - Click **"Generate Prompt"**.
-    - The extension will build a detailed prompt containing:
-      - Element details (Tag, ID, Class, Dimensions).
-      - Spatial mapping of problem areas.
-      - Your specific user feedback.
-    - Click **"Copy to Clipboard"** and use it to fix your code!
-
-## Project Structure
-
-- `manifest.json`: Extension configuration (Manifest V3).
-- `content.js`: Handles element selection, grid overlay, and grouping logic.
-- `popup.html`: The user interface for the extension popup.
-- `popup.js`: Logic for the popup, including state management and prompt generation.
-- `styles.css`: Styling for the popup UI.
-
-## Technologies Used
-
-- **Manifest V3**: The latest Chrome Extension platform version.
-- **JavaScript (ES6+)**: Core logic.
-- **CSS3**: Styling and Grid layout.
-- **HTML5**: Structure.
+- **Platform**: Chrome Extension Manifest V3
+- **Stack**: JavaScript (ES6+), HTML5, CSS3
+- **Theme**: Professional Monochrome (Inter/System Font Stack)
 
 ## License
 
 This project is open-source and available for personal and commercial use.
+
+---
+
+Built by [DAMA](https://github.com/DahamDissanayake/web-design-prompt-extension)
