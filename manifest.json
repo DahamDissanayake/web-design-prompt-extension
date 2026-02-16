@@ -3,7 +3,7 @@
   "name": "VibeCheck Layout Assistant",
   "version": "1.1",
   "description": "Debug web layouts by selecting elements, identifying problem areas, and generating fix prompts.",
-  "permissions": ["activeTab", "scripting", "storage"],
+  "permissions": ["activeTab"],
   "action": {
     "default_title": "VibeCheck Assistant",
     "default_popup": "popup.html",
